@@ -1,0 +1,75 @@
+1. docker build -t myapp .
+2. docker images
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+myapp               latest              ee8ab82f60cc        17 seconds ago      54.4MB
+python              3.8-alpine          d314e28e240c        5 weeks ago         43.2MB
+3. docker run -p 5000:5000 -d myapp
+
+Till here we can deploy and test locally
+
+
+Now let us upload this image to image-repository (ECR)
+
+1. Create the repo if not exist before:
+
+sandeep@sanju:~/test-flaskapp-ecs$ aws ecr create-repository --repository-name sample-repo --region us-east-1
+{
+    "repository": {
+        "repositoryUri": "338371462676.dkr.ecr.us-east-1.amazonaws.com/sample-repo",
+        "imageScanningConfiguration": {
+            "scanOnPush": false
+        },
+        "registryId": "338371462676",
+        "imageTagMutability": "MUTABLE",
+        "repositoryArn": "arn:aws:ecr:us-east-1:338371462676:repository/sample-repo",
+        "repositoryName": "sample-repo",
+        "createdAt": 1641515549.0
+    }
+}
+
+2. Authenticate your Docker client to the Amazon ECR registry to which you intend to push your image the tokens are valid for 12 hours
+aws ecr get-login-password
+output > eyJwYXlsb2FkIjoiZ3VGYWVOTTBzekhHckx6V3RiL0ROMjh2dDZPQWt0OVFpRkFJcmJiWDI0T1ZEckw2WDJVOWlMMEtEZnZDMldoOXFBeTluZmZBbWpGU0dPMmxHa0pLaUFjd3ZNZHdNMWFUTElnelJHRkYxMlloci80YURzR0xYNDFZSDcrc1k2alFRRjdiWnNsTmFDMm9lTFRCRW9sdThWUWVoTUJhREY1THVxSFVOaWZkOWVSWXppK1Vxcy9jRDMxbmhuSGp5anhtZG9SK3NwRHk2R2VHTG9GWlJ3QWxaUGRYcnQyOXlaaUpqS2lBZlN5U1lURmo5YVMzcG9pSW5lNExXbmhVMDJjMWo4K1cvK1ZOaU96blN4dW5oSWhkK21WNVBBcEVVNnBpdzNZTWFDclRzUWlpYXlYMEJCR01qaTBYZkl3UVBZZC9WK2JlUzJlRjFVRmRieko0Lzl5dHJtOFNCa2dKVU1HRkJJTUxiUzk2UzdEMlF3UnJJQ1FNWEEvbGJ4a3FqRWxmODdNU0lhWFRpdEdGS2gyQzg5dWtRbGh6ZlQ5Y2tUZTBTZFUrNXdzWEwwelBieWxmY0VjSkk4MHdZS09kWk5FU3cyUUpQeUJXYmd4ZDljVW9HdWVPNXpDT0pvYi9Bd0VMbk9MYnZMWG1wTTlEVGUxUVVsTkhiVEhaMEVJY25YbkFZdmtTTXU5bi9zUHRUYkRSUEtQUkxlYTZHMitpbVFVMVFDTjNldU5sZUxTekl5VURuZDdIRnRyTkViUkc0ZDZDNkovM0dhS1BpeWY1NW1pQ1V1eDU5dnRORDJTNmpZck5DYW5qU3RSS1JqUFlnVjRMdUVCNnFIWTBSVW55bndURUdRZGxSaEw4ZzdJNDJsMHkrOHBkMElDTElvT21oYXVkck5qcmlZS1VHTFpjTFdsaVJodEQ3alpLRmR1VWUrRG83L2tpV3ZZSTZ0UzYxYTRNVVY3T2pqdE9GaDMrUTZnNW5ndXBwZFZURUJMMlpCWXAyN0hxOHVnbEdvbndzV0ZzUkpqdTArTzRJZ0pQTFp0M0ttMUpvWXlIVjBTZ3B3OGZwNVRZT1VtL3NCTm9XUU1rdGZTUisrRHIwZWRXenMzdU90bkNUMXFvMnhPYkJzdGxRSG1oZStxZDRmTDVURStVNWNpYXc4cFJ0b1pnMmNCRjdqT0xtMXZnRkdtVWd6NjlCZ2pET29KUUEwcE0rVTNRQndqeEpWcGczZUdBdHpPVWtrZVo3U3pCcG1rdERSRFd2R09mVlNuUHpZdDB6Z25Kc2xjZVF5ckFJOHdDU21jdWRGcmVFSDFPcDRkdWEvK3B0aXoxTkdubFFBcHVZVEVBcjNMOVFZSXpDU1cvV1lkN0doV2t3em1IS2x1R3JqVFVDMzdjOEtRYlpDZ00yM1JVcUE9PSIsImRhdGFrZXkiOiJBUUVCQUhod20wWWFJU0plUnRKbTVuMUc2dXFlZWtYdW9YWFBlNVVGY2U5UnE4LzE0d0FBQUg0d2ZBWUpLb1pJaHZjTkFRY0dvRzh3YlFJQkFEQm9CZ2txaGtpRzl3MEJCd0V3SGdZSllJWklBV1VEQkFFdU1CRUVESjB2RWc2NS9YMzJldTJVTGdJQkVJQTd2TkdQT3pjeXdBbXVXb2h6MmVVczUzRzZDWGlzVXlqdmJmSHV5WXppRTZUOTcxTmJLWk9ZcFpOMkIyTHlpbE5QOUpzbTlTMDRrR1dOaVJVPSIsInZlcnNpb24iOiIyIiwidHlwZSI6IkRBVEFfS0VZIiwiZXhwaXJhdGlvbiI6MTY0MTU1ODYxN30=
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 338371462676.dkr.ecr.us-east-1.amazonaws.com
+output  > login succeeded
+
+3. docker images
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+myapp               latest              ee8ab82f60cc        17 seconds ago      54.4MB
+python              3.8-alpine          d314e28e240c        5 weeks ago         43.2MB
+
+4. sandeep@sanju:~/test-flaskapp-ecs$ docker tag myapp 338371462676.dkr.ecr.us-east-1.amazonaws.com/sample-repo:v1
+sandeep@sanju:~/test-flaskapp-ecs$ docker images
+REPOSITORY                                                 TAG                 IMAGE ID            CREATED             SIZE
+myapp                                                      latest              ee8ab82f60cc        29 minutes ago      54.4MB
+338371462676.dkr.ecr.us-east-1.amazonaws.com/sample-repo   v1                  ee8ab82f60cc        29 minutes ago      54.4MB
+python                                                     3.8-alpine          d314e28e240c        5 weeks ago         43.2MB
+
+5. docker push 338371462676.dkr.ecr.us-east-1.amazonaws.com/sample-repo:v1
+so now our image name is "sample-name" and tag is "v1"
+
+6. Deploy infrastructure-ecs-fargate.yaml as temp-infra (this name is used as parameter in service.yaml)
+7. Deploy service.yaml as app-stack
+
+reference: 
+https://blog.logrocket.com/build-deploy-flask-app-using-docker/
+https://docs.aws.amazon.com/cli/latest/reference/ecr/create-repository.html
+https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html
+https://josepheigenraam.com/deploy-ghost-on-aws-fargate-using-cloudformation-part-2/index.html
+    https://github.com/JosephEigenraam/code-samples/blob/master/deploy-ghost-on-aws/part2/infrastructure/vpc.yaml
+    https://github.com/JosephEigenraam/code-samples/blob/master/deploy-ghost-on-aws/part2/infrastructure/service.yaml
+
+
+Trying with ECS EC2:
+- we have choosen the public subnet here.
+- see how the docker logs are send to cloudwatch
+- Do we really need SG for container here?
+- Do we need to add role to container or the role to ec2 enough?
+- what is auto-scaling lifecycle hook to drain the task from ec2 instance when terminated?
+
+
+6. Deploy infrastructure-ecs-ec2.yaml as temp-infra (this name is used as parameter in service.yaml)
+7. Deploy service.yaml as app-stack
+
+reference:
+https://github.com/aws-samples/ecs-refarch-cloudformation/blob/master/infrastructure/ecs-cluster.yaml
